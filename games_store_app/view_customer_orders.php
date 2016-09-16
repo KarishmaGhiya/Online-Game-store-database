@@ -1,0 +1,212 @@
+<?php # view_customer_orders.php
+
+$page_title = 'View All Customer Orders';
+
+// Page header.
+echo '<h1 id="mainhead" align="center">All Customer Orders:</h1>';
+
+include ('mysqli_connect.php');
+
+// Number of records to show per page:
+$display = 5;
+
+// Determine how many pages there are. 
+if (isset($_GET['np'])) { // Already been determined.
+	$num_pages = $_GET['np'];
+} else { // Need to determine.
+
+ 	// Count the number of records
+ 	$query = "SELECT COUNT(*) FROM customer_orders ORDER BY order_id ASC";
+	$result = @mysqli_query ($dbc, $query);
+	$row = @mysqli_fetch_array ($result, MYSQL_NUM);
+	$num_records = $row[0];
+	//var_dump($row);
+	//echo $num_records;
+	// Calculate the number of pages.
+	if ($num_records > $display) { // More than 1 page.
+		$num_pages = ceil ($num_records/$display);
+	//		echo $num_pages;
+	} else {
+		$num_pages = 1;
+		echo $num_pages;
+	}
+
+} // End of np IF.
+
+
+// Determine where in the database to start returning results.
+if (isset($_GET['s'])) {
+	$start = $_GET['s'];
+} else {
+	$start = 0;
+}
+
+// Default column links.
+$link0 = "{$_SERVER['PHP_SELF']}?sort=o_a";
+$link1 = "{$_SERVER['PHP_SELF']}?sort=d_a";
+$link2 = "{$_SERVER['PHP_SELF']}?sort=pc_d";
+$link3 = "{$_SERVER['PHP_SELF']}?sort=cn_a";
+$link4 = "{$_SERVER['PHP_SELF']}?sort=os_a";
+$link5 = "{$_SERVER['PHP_SELF']}?sort=ds_a";
+$link6 = "{$_SERVER['PHP_SELF']}?sort=pr_a";
+
+// Determine the sorting order.
+if (isset($_GET['sort'])) {
+
+	// Use existing sorting order.
+	switch ($_GET['sort']) {
+		case 'o_a':
+			$order_by = 'order_id ASC';
+			$link0 = "{$_SERVER['PHP_SELF']}?sort=o_d";
+			break;
+		case 'o_d':
+			$order_by = 'order_id DESC';
+			$link0 = "{$_SERVER['PHP_SELF']}?sort=o_a";
+			break;
+		case 'd_a':
+			$order_by = 'date_order ASC';
+			$link1 = "{$_SERVER['PHP_SELF']}?sort=d_d";
+			break;
+		case 'd_d':
+			$order_by = 'date_order DESC';
+			$link1 = "{$_SERVER['PHP_SELF']}?sort=d_a";
+			break;
+		case 'pc_a':
+			$order_by = 'product_count ASC';
+			$link2 = "{$_SERVER['PHP_SELF']}?sort=pc_d";
+			break;
+		case 'pc_d':
+			$order_by = 'product_count DESC';
+			$link2 = "{$_SERVER['PHP_SELF']}?sort=pc_a";
+			break;
+		case 'cn_a':
+			$order_by = 'customer_name ASC';
+			$link3 = "{$_SERVER['PHP_SELF']}?sort=cn_d";
+			break;
+		case 'cn_d':
+			$order_by = 'customer_name DESC';
+			$link3 = "{$_SERVER['PHP_SELF']}?sort=cn_a";
+			break;
+		case 'os_a':
+			$order_by = 'order_status ASC';
+			$link4 = "{$_SERVER['PHP_SELF']}?sort=os_d";
+			break;
+		case 'os_d':
+			$order_by = 'order_status DESC';
+			$link4 = "{$_SERVER['PHP_SELF']}?sort=os_a";
+			break;
+		case 'ds_a':
+			$order_by = 'description ASC';
+			$link5 = "{$_SERVER['PHP_SELF']}?sort=ds_d";
+			break;
+		case 'ds_d':
+			$order_by = 'description DESC';
+			$link5 = "{$_SERVER['PHP_SELF']}?sort=ds_a";
+			break;
+		case 'pr_a':
+			$order_by = 'pro_name ASC';
+			$link6 = "{$_SERVER['PHP_SELF']}?sort=pr_d";
+			break;
+		case 'pr_d':
+			$order_by = 'pro_name DESC';
+			$link6 = "{$_SERVER['PHP_SELF']}?sort=pr_a";
+			break;
+		default:
+			$order_by = 'order_id ASC';
+			break;
+	}
+
+	// $sort will be appended to the pagination links.
+	$sort = $_GET['sort'];
+	
+} else { // Use the default sorting order.
+	$order_by = 'order_id ASC';
+	$sort = 'o_a';
+}
+
+// Make the query.
+$query = "SELECT order_id, date_order,product_count, customer_id, description ,customer_name,order_status,Product, pro_name FROM customer, customer_orders, Product WHERE customer_orders.product= Product.Product_id AND customer_orders.customer = customer.customer_id  ORDER BY $order_by LIMIT $start, $display";
+
+$result = @mysqli_query ($dbc, $query); // Run the query.
+//echo $result;
+// Table header.
+echo "<p align='center'><b>Ordered by $order_by </b></p>";
+echo '<table align="center" cellspacing="0" cellpadding="5">
+<tr>
+	<td align="left"><b>Edit</b></td>
+	<td align="left"><b>Delete</b></td>
+	<td align="left"><b><a href="' . $link0 . '">Order id</a></b></td>
+	<td align="left"><b><a href="' . $link1 . '">Date</a></b></td>
+	<td align="left"><b><a href="' . $link2 . '">Product count</a></b></td>
+	<td align="left"><b><a href="' . $link3 . '">Customer name</a></b></td>
+	<td align="left"><b><a href="' . $link5 . '"> Description </a></b></td>
+	<td align="left"><b><a href="' . $link6 . '"> Product name </a></b></td>
+	<td align="left"><b><a href="' . $link4 . '"> Order Status</a></b></td>		
+</tr>
+';
+$query = "SELECT order_id, date_order,product_count, customer_id, description ,customer_name,order_status,Product, pro_name FROM customer, customer_orders,Product WHERE customer_orders.product= Product.Product_id AND customer_orders.customer = customer.customer_id  ORDER BY $order_by LIMIT $start, $display";
+
+$result = @mysqli_query ($dbc, $query); // Run the query.
+
+// Fetch and print all the records.
+$bg = '#eeeeee'; // Set the background color.
+while ($row = @mysqli_fetch_array($result, MYSQL_ASSOC)) {
+	$bg = ($bg=='#eeeeee' ? '#ffffff' : '#eeeeee'); // Switch the background color.
+	echo '<tr bgcolor="' . $bg . '">
+		<td align="left"><a href="edit_orders.php?id=' . $row['order_id'] . '">Edit</a></td>
+		<td align="left"><a href="delete_orders.php?id=' . $row['order_id'] . '">Delete</a></td>
+		<td align="left">' . $row['order_id'] . '</td>
+		<td align="left">' . $row['date_order'] . ' </td>
+		<td align="left">' . $row['product_count'] . '</td>
+		<td align="left">' . $row['customer_name'] . '</td>
+		<td align="left">' . $row['description'] . '</td>
+		<td align="left">' . $row['pro_name'] . '</td>
+		<td align="left">' . $row['order_status'] . '</td>
+	</tr>
+	';
+	
+}
+
+echo '</table>';
+
+@mysqli_free_result ($result); // Free up the resources.	
+
+@mysqli_close($dbc); // Close the database connection.
+//echo $num_pages;
+// Make the links to other pages, if necessary.
+if ($num_pages > 1) {
+	
+	echo '<br /><p align="center">';
+	// Determine what page the script is on.	
+	$current_page = ($start/$display) + 1;
+	
+	// If it's not the first page, make a First button and a Previous button.
+	if ($current_page != 1) {
+		echo '<a href="view_customer_orders.php?s=0&np=' . $num_pages . '&sort=' . $sort .'">First</a> ';
+		echo '<a href="view_customer_orders.php?s=' . ($start - $display) . '&np=' . $num_pages . '&sort=' . $sort .'">Previous</a> ';
+	}
+	
+	// Make all the numbered pages.
+	for ($i = 1; $i <= $num_pages; $i++) {
+		if ($i != $current_page) {
+			echo '<a href="view_customer_orders.php?s=' . (($display * ($i - 1))) . '&np=' . $num_pages . '&sort=' . $sort .'">' . $i . '</a> ';
+		} else {
+			echo $i . ' ';
+		}
+	}
+	
+	// If it's not the last page, make a Last button and a Next button.
+	if ($current_page != $num_pages) {
+		echo '<a href="view_customer_orders.php?s=' . ($start + $display) . '&np=' . $num_pages . '&sort=' . $sort .'">Next</a> ';
+		echo '<a href="view_customer_orders.php?s=' . (($num_pages-1) * $display) . '&np=' . $num_pages . '&sort=' . $sort .'">Last</a>';
+
+	}
+	
+	echo '</p>';
+	echo "<p align='center'><a href='order_timeline.php'>Filter Orders by Dates</p>";
+	
+} // End of links section.
+
+?>
+
+
